@@ -2,3 +2,5 @@
 .venv
 .env
 .env.*
+*volume
+__pycache__

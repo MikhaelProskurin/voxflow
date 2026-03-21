@@ -1,15 +1,14 @@
 from datetime import datetime
-from typing import Optional
+from typing import Optional, Literal
 
 from sqlalchemy import (
-    String,
-    Integer,
-    DateTime,
     BigInteger,
-    Enum as SAEnum,
+    Integer,
+    String,
     ForeignKey,
-    func
+    DateTime,
 )
+from sqlalchemy import func as f
 from sqlalchemy.ext.asyncio import AsyncAttrs
 from sqlalchemy.orm import (
     DeclarativeBase,
@@ -19,7 +18,6 @@ from sqlalchemy.orm import (
     relationship
 )
 
-from .pydantic import TaskStatesEnum
 
 
 class Base(AsyncAttrs, DeclarativeBase):
@@ -36,10 +34,10 @@ class User(Base):
     __tablename__ = "user_t"
 
     telegram_user_id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
-    telegram_username: Mapped[str] = mapped_column(String(64))
+    telegram_username: Mapped[str] = mapped_column(String(100))
     
-    created_at: Mapped[datetime] = mapped_column(default=func.now())
-    updated_at: Mapped[Optional[datetime]] = mapped_column(default=func.now(), onupdate=func.now(), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(default=f.now())
+    updated_at: Mapped[Optional[datetime]] = mapped_column(default=f.now(), onupdate=f.now(), nullable=True)
 
     tasks: Mapped[list["Task"]] = relationship(back_populates="user")
 
@@ -51,10 +49,10 @@ class Task(Base):
     telegram_user_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("user_t.telegram_user_id", ondelete="CASCADE"))
 
     title: Mapped[str] = mapped_column(String(512))
-    status: Mapped[TaskStatesEnum] = mapped_column(SAEnum(TaskStatesEnum), default=TaskStatesEnum.open)
+    status: Mapped[Literal["opened", "closed"]] = mapped_column(String())
 
-    due_date: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
-    created_at: Mapped[datetime] = mapped_column(default=func.now())
-    updated_at: Mapped[Optional[datetime]] = mapped_column(default=func.now(), onupdate=func.now(), nullable=True)
+    due_date: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(default=f.now())
+    updated_at: Mapped[datetime] = mapped_column(default=f.now(), onupdate=f.now(), nullable=True)
 
     user: Mapped["User"] = relationship(back_populates="tasks")
